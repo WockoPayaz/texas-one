@@ -4,7 +4,7 @@
 
 1. Open `/manager`, sign in and keep Orders open. Enable the order alert sound with the button; the screen refreshes every 10 seconds.
 2. In Settings enter actual JazzCash, Easypaisa and bank account details. Customers supply their transfer reference. Verify receipt in your banking/payment app before marking a payment paid.
-3. Review menu prices, confirm the disabled Special Shawarma and upload your item photographs. Menu supports PNG, JPEG and WebP up to 5 MB.
+3. Review menu prices, confirm the disabled Special Shawarma and upload your item photographs. Menu supports PNG, JPEG and WebP up to 4 MB.
 4. Create tables with meaningful labels. Use the final public website URL to download/print QR codes; test each before attaching it to a table. Disable a table to stop orders through its QR.
 
 ## Handling orders
@@ -18,9 +18,9 @@
 
 ## Before public launch
 
-- Open manager as the owner while the preview is private; then disable `INITIAL_OWNER_SETUP`.
-- Confirm the final domain and request public access. The current preview is owner-private.
-- Add staff email addresses in Team. Each manager signs in with their own ChatGPT account.
+- Complete the Vercel/Supabase setup in README.md and sign in as the configured owner.
+- Create staff users in Supabase Authentication and add their emails in Team.
+- Confirm the final public domain before printing table QR codes.
 - Confirm payment accounts and the obscured menu entries.
 - Test one delivery, pickup and table order, payment verification, cancellation, uploads and printing. Cancel test orders afterward.
 - Decide tax treatment, refund policy and delivery expectations for your actual operation. Current totals include food plus the fixed delivery fee only.
