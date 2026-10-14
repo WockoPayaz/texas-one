@@ -18,6 +18,7 @@ function storage(){
  return createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}}).storage.from('menu-images');
 }
 export const photos={
+ async remove(key:string){const {error}=await storage().remove([key]);if(error)throw Error('Could not remove unused upload.');},
  async get(key:string){const {data,error}=await storage().download(key);if(error||!data)return null;return {body:data,httpMetadata:{contentType:data.type}};},
  async put(key:string,bytes:Uint8Array,options:{httpMetadata:{contentType:string}}){const {error}=await storage().upload(key,bytes,{contentType:options.httpMetadata.contentType,upsert:false});if(error)throw new Error('Photo upload failed. Check the menu-images bucket and storage configuration.');}
 };

@@ -60,3 +60,5 @@ Menu photos start empty. Special Shawarma's partly obscured price is provisional
 The earlier ChatGPT Sites preview is a separate Cloudflare deployment. Existing orders, uploaded photos, settings and manager accounts there do **not** automatically transfer to Supabase. This repository now targets Vercel; the previous preview remains unchanged. Use Supabase backups for live records and photos; a source ZIP is not a data backup.
 
 See [daily operations](docs/OPERATIONS.md) and [REA/reference investigation](docs/REFERENCE.md).
+
+Payment receipt screenshots are stored under a private receipts/ prefix in the existing menu-images bucket. Only authenticated, allowlisted managers can retrieve them through the receipt endpoint. They are excluded from public tracking and image routes. No extra environment variables or SQL migration is required. Legacy order reference IDs remain visible to managers.

@@ -3,7 +3,7 @@
 ## Opening checklist
 
 1. Open `/manager`, sign in and keep Orders open. Enable the order alert sound with the button; the screen refreshes every 10 seconds.
-2. In Settings enter actual JazzCash, Easypaisa and bank account details. Customers supply their transfer reference. Verify receipt in your banking/payment app before marking a payment paid.
+2. In Settings enter actual JazzCash, Easypaisa and bank account details. Customers upload their receipt screenshot (JPG, PNG or WebP, up to 4 MB). Open the private screenshot from order details. Verify receipt in your banking/payment app before marking a payment paid.
 3. Review menu prices, confirm the disabled Special Shawarma and upload your item photographs. Menu supports PNG, JPEG and WebP up to 4 MB.
 4. Create tables with meaningful labels. Use the final public website URL to download/print QR codes; test each before attaching it to a table. Disable a table to stop orders through its QR.
 
@@ -27,3 +27,5 @@
 - Arrange operational database and image backups before relying on the system for live trading. The source ZIP does not contain future orders or uploads.
 
 Settings lets you pause new orders. Existing order history remains available. The dashboard shows the latest 300 orders; it is intended for day-to-day service rather than long-term accounting/reporting.
+
+Payment receipt screenshots are stored under a private receipts/ prefix in the existing menu-images bucket. Only authenticated, allowlisted managers can retrieve them through the receipt endpoint. They are excluded from public tracking and image routes. No extra environment variables or SQL migration is required. Legacy order reference IDs remain visible to managers.
