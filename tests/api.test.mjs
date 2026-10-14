@@ -9,7 +9,7 @@ compile('lib/menu.ts','menu.mjs');compile('lib/order.ts','order.mjs');compile('l
 const postgres=new PGlite();
 await postgres.exec('CREATE ROLE anon; CREATE ROLE authenticated; CREATE SCHEMA storage; CREATE TABLE storage.buckets(id text PRIMARY KEY,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);');
 await postgres.exec(readFileSync(new URL('../supabase/schema.sql',import.meta.url),'utf8'));
-globalThis.__testPool=class {async query(sql,args){let r;try{r=await postgres.query(sql,args);}catch(e){console.error(e.message);throw e;}return {rows:r.rows,rowCount:r.affectedRows};}};
+globalThis.__testPool=class {async query(sql,args){if(globalThis.__testDbError)throw globalThis.__testDbError;let r;try{r=await postgres.query(sql,args);}catch(e){console.error(e.message);throw e;}return {rows:r.rows,rowCount:r.affectedRows};}};
 globalThis.__testUser=null;globalThis.__testPhotos={get:async()=>null,put:async()=>{}};
 process.env.DATABASE_URL='postgresql://test-only';process.env.OWNER_EMAIL='owner@example.test';
 const {GET,POST,PUT,DELETE}=await import(new URL('api.mjs',dir));
@@ -28,3 +28,5 @@ test('unconfigured deployment shows a read-only menu and rejects ordering',async
 test('removed manager loses access immediately',async()=>{await send('admin/manager','POST',{email:'staff@example.test'});globalThis.__testUser={email:'staff@example.test'};assert.equal((await send('admin')).status,200);assert.equal((await send('admin/manager','POST',{email:'other@example.test'})).status,403);globalThis.__testUser={email:'owner@example.test'};await send('admin/manager','DELETE',{email:'staff@example.test'});globalThis.__testUser={email:'staff@example.test'};assert.equal((await send('admin')).status,403);globalThis.__testUser={email:'owner@example.test'};});
 test('stale checkout total is rejected',async()=>{const c=customer();c.expectedTotal=1;assert.equal((await send('orders','POST',c)).status,400);});
 test.after(async()=>await postgres.close());
+
+test('database errors report a safe diagnosis without leaking credentials',async()=>{const original=console.error;const logged=[];console.error=(...args)=>logged.push(args);try{for(const [code,reference] of [['28P01','DB_PASSWORD'],['42P01','DB_TABLES'],['SELF_SIGNED_CERT_IN_CHAIN','DB_CERTIFICATE']]){globalThis.__testDbError=Object.assign(new Error('postgresql://secret-password@private-host'),{code});const r=await send('catalog');assert.equal(r.status,503);assert.equal(r.body.reference,reference);assert(!JSON.stringify(r).includes('secret-password'));}assert(!JSON.stringify(logged).includes('secret-password'));}finally{globalThis.__testDbError=null;console.error=original;}});
