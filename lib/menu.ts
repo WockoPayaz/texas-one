@@ -1,0 +1,33 @@
+export type Variant = {name:string;price:number};
+export type MenuItem = {id:string;name:string;category:string;description:string;variants:Variant[];image:string;available:boolean;featured:boolean;extraCheese?:boolean;review?:string};
+const items:MenuItem[]=[];
+function add(category:string,name:string,prices:number|number[],labels:string[]=['Regular'],description='',extraCheese=false,review=''){
+ const p=Array.isArray(prices)?prices:[prices];items.push({id:name.toLowerCase().replace(/[^a-z0-9]+/g,'-'),name,category,description,variants:p.map((price,i)=>({name:labels[i]||'Regular',price})),image:'',available:!review,featured:false,extraCheese,review});
+}
+for(const [n,p] of [['Chicken Tikka Pizza',[630,1200,1650]],['Chicken Fajita Pizza',[630,1200,1650]],['BBQ Pizza',[630,1200,1650]],['Cheese Lover Pizza',[700,1300,1800]],['Vegetable Lover Pizza',[600,1100,1600]],['Chicken Pepperoni Pizza',[700,1250,1800]],['Kabab Crust Pizza',[650,1300,1750]],['Creamy Pizza',[630,1200,1650]],['Chicken Supreme Pizza',[650,1200,1700]],['Texas One Special Pizza',[700,1300,1850]]] as [string,number[]][])add('Pizza',n,p,['Small','Medium','Large'],'',true);
+for(const [n,p] of [['Grilled Chicken Burger',390],['Chicken Grilled BBQ Patty',360],['Chicken Fillet Burger',550],['Chicken Burger',360],['Chicken Jalapeño Burger',450],['Chicken Crispy Burger',350],['Double Chicken Burger',650],['Double Decker Zinger Burger',690],['Zingrato Jalapeño',630],['Zinger Burger',530],['Beef BBQ Burger',550],['Beef Mexican Burger',650],['Beef Jalapeño Burger',600]] as [string,number][])add('Burgers',n,p);
+for(const [n,p] of [['Plain Fries',[250,350]],['Masala Fries',[260,360]],['Mayo Garlic Fries',[300,350]],['BBQ Masala Fries',[300,350]],['Pizza Loaded Fries',[480,670]],['Cheese Fries',[350,480]]] as [string,number[]][])add('Fries',n,p,['Medium','Large']);
+for(const [n,p] of [['Crispy Wings',380],['Spicy Wings',390],['BBQ Wings',410],['Honey Wings',410],['Hot Wings',390],['Buffalo Wings',450]] as [string,number][])add('Wings',n,p,['6 pieces']);
+add('Chicken & Broast','Chicken Crispy Zinger Bites',[410,430],['Without bang bang sauce','With bang bang sauce']);
+add('Chicken & Broast','Chicken Nugget Bucket with Fries',[350,390],['Without sauce','With sauce'],'Served with fries.');
+add('Chicken & Broast','Broast',[530,950,1600],['Quarter · 2 pieces','Half · 4 pieces','Full · 8 pieces']);
+for(const [n,p] of [['Special Sandwich',600],['Club Sandwich',550],['Chicken Grill Sandwich',440],['BBQ Smoke Sandwich',580],['Mushroom Sandwich',580]] as [string,number][])add('Sandwiches',n,p);
+for(const [n,p] of [['Alfredo Pasta',600],['Fettuccine Spicy Pasta',750],['Special Pasta',800],['Chicken Lasagna',990],['Pizza Paratha',580],['Pizza Roll',790]] as [string,number][])add('Pasta & More',n,p,['Regular'],n==='Chicken Lasagna'?'2 servings.':'');
+for(const [n,p] of [['Chicken Shawarma',330],['Chicken Cheese Shawarma',350],['Mayo Garlic Shawarma',380],['Spicy Shawarma',350],['Special Shawarma',450]] as [string,number][])add('Shawarma',n,p,['Regular'],'',false,n==='Special Shawarma'?'Price partly obscured in supplied menu; confirm before enabling.':'');
+add('Pasta & More','Texas One Special Nachos',500);
+for(const [n,p] of [['Special Chow Mein',750],['Beef Chow Mein',650],['Chicken Shashlik',650],['Chicken Chilli Dry',600],['Chicken Manchurian',700],['Dry Red Pepper Chicken',650],['Fried Rice',550],['Vegetable Rice',450],['Egg Fried Rice',500]] as [string,number][])add('Chinese',n,p);
+add('Soups','Hot & Sour Soup',[650,990],['Half bowl','Full bowl'],'White or red — please specify in order notes.');
+add('Soups','Texas One Special Chicken Soup',[720,1020],['Half bowl','Full bowl']);
+add('Soups','Chicken Corn Soup',[650,990],['Half bowl','Full bowl']);
+for(const [n,p] of [['Special Chicken Steak',1200],['Special Beef Steak',1350],['Moroccan Steak',950],['Mushroom Steak',950],['Black Pepper Steak',950],['Mexican Steak',950],['BBQ Steak',950]] as [string,number][])add('Steaks',n,p);
+for(const n of ['Vanilla','Strawberry','Mango','Chocolate','Kulfa','Pista'])add('Ice Cream Shakes',n+' Ice Cream Shake',390);
+add('Ice Cream Shakes','Cold Coffee',350);
+for(const n of ['Oreo','KitKat','Snicker','Cadbury','Dry Fruit','Bounty'])add('Chocolate Shakes',n+' Shake',n==='Dry Fruit'?430:390);
+for(const [n,p] of [['Mango',250],['Banana',210],['Strawberry',250],['Date',290],['Pineapple',350],['Cocktail',250],['Badam',300],['Chico',350],['Injer',280],['Koya Injer',350],['Koya Banana',290],['Koya Badam',380],['Peach',250]] as [string,number][])add('Fruit Shakes',n+' Fruit Shake',p);
+for(const [n,p] of [['Apple',350],['Lemon',200],['Orange',290],['Mango',250],['Peach',350],['Red Grapes',290],['Falsa',350],['Carrot',220],['Pineapple',350],['ABC',390]] as [string,number][])add('Fresh Juices',n+' Juice',p);
+for(const n of ['Mint Margarita','Pineapple Margarita','Mint Lemonade'])add('Margaritas & Soda',n,290);
+add('Margaritas & Soda','Lemon Soda',240);
+for(const name of ['Texas One Special Pizza','Double Decker Zinger Burger','Chicken Lasagna','Special Chicken Steak'])items.find(i=>i.name===name)!.featured=true;
+export const seedMenu=items;
+export const defaultSettings={name:'TEXAS ONE',phone:'03178103338',address:'PSO Askari Petrol Pump, Airport Road, Quetta',hours:'Open 24 hours',deliveryArea:'All of Quetta',deliveryFee:300,minimumOrder:1000,acceptingOrders:true,payments:{jazzcash:{title:'',account:''},easypaisa:{title:'',account:''},bank:{title:'',account:'',bankName:''}}};
+export type Settings=typeof defaultSettings;

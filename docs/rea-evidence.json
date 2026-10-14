@@ -1,0 +1,11 @@
+{
+  "tool": "rea-agents@6.4.0",
+  "command": "analyze-javascript-application",
+  "target": "https://cheezious.com/",
+  "status": "partial: inventory only; semantic analysis unavailable",
+  "code": "capability_unavailable",
+  "message": "Linux process ownership inspection requires a procps-compatible ps on REA's PATH before launching a child: Command failed: ps -axo pid=,ppid=,pgid=,uid=,stat=,command=\nfatal library error, lookup self\n",
+  "evidence_id": "ev_a9a06994dd54498b01495ffea8a3b8c12dd02a41ed9a8e5b79ce4385c49134cd",
+  "root_sha256": "59d5db8658deddc16dc93d730dc3db52e55ef3b3bc6691ab0e48711e2e532cc1",
+  "source_files": 29
+}

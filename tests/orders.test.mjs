@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {priceOrder} from '../lib/order.ts';
+import {seedMenu,defaultSettings} from '../lib/menu.ts';
+const settings=structuredClone(defaultSettings);
+const pizza=seedMenu.find(i=>i.name==='Chicken Tikka Pizza');
+const burger=seedMenu.find(i=>i.name==='Chicken Burger');
+test('delivery charges exactly 300 and uses menu prices',()=>{const r=priceOrder([{id:pizza.id,variant:1,quantity:1}],seedMenu,'delivery',settings);assert.equal(r.total,1500);assert.equal(r.subtotal,1200);});
+test('pickup and dine-in waive delivery and minimum',()=>{for(const mode of ['pickup','dine-in'])assert.equal(priceOrder([{id:burger.id,variant:0,quantity:1}],seedMenu,mode,settings).total,360);});
+test('delivery minimum excludes the delivery charge',()=>assert.throws(()=>priceOrder([{id:pizza.id,variant:0,quantity:1}],seedMenu,'delivery',settings),/Minimum/));
+test('extra cheese follows the supplied small medium large prices',()=>{for(let i=0;i<3;i++)assert.equal(priceOrder([{id:pizza.id,variant:i,quantity:2,cheese:true}],seedMenu,'pickup',settings).total,(pizza.variants[i].price+[100,150,200][i])*2);});
+test('rejects invalid variants, quantities and unavailable items',()=>{for(const l of [{id:pizza.id,variant:4,quantity:1},{id:pizza.id,variant:0,quantity:-1},{id:pizza.id,variant:0,quantity:31},{id:burger.id,variant:0,quantity:1,cheese:true}])assert.throws(()=>priceOrder([l],seedMenu,'pickup',settings));assert.throws(()=>priceOrder([{id:pizza.id,variant:0,quantity:1}],seedMenu.map(i=>({...i,available:false})),'pickup',settings));});
+test('all menu ids are unique, prices positive, item pictures empty',()=>{assert.equal(new Set(seedMenu.map(i=>i.id)).size,seedMenu.length);assert(seedMenu.every(i=>!i.image&&i.variants.every(v=>Number.isInteger(v.price)&&v.price>0)));assert(!JSON.stringify(seedMenu).toLowerCase().includes('muncheez'));});
