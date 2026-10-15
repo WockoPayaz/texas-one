@@ -237,3 +237,19 @@ body:has(.mobile-cart) footer{padding-bottom:110px}
 @media (prefers-reduced-motion:reduce){
  body:has(.site-header) .primary,.product-bottom .add-button{transition:none}
 }
+
+/* Desktop reference: generous photo above a compact product information panel. */
+@media screen and (min-width:761px){
+ .menu-section .product-card{background:#fff;box-shadow:0 3px 12px #30251f08}
+ .menu-section .product-card .product-photo{height:auto;aspect-ratio:4/3;padding:12px;background:#fff}
+ .menu-section .product-card .product-photo img{width:100%;height:100%;object-fit:contain}
+ .menu-section .product-body{padding:14px 16px 16px;background:#faf7f3}
+ .menu-section .product-meta{display:none}
+ .menu-section .product-card h3{font-size:18px;line-height:1.3;margin-bottom:7px}
+ .menu-section .product-card p{font-size:12px;line-height:1.5;-webkit-line-clamp:2;margin-bottom:7px}
+ .menu-section .options-label{margin-bottom:9px}
+ .menu-section .product-bottom{flex-direction:column;align-items:stretch;gap:10px;border-top:0;padding-top:0}
+ .menu-section .product-bottom strong{font-size:18px;color:var(--red);line-height:1.3}
+ .menu-section .product-bottom strong small{font-size:11px;color:#76675d}
+ .menu-section .product-bottom .add-button{width:100%;min-height:44px;font-size:13px}
+}
