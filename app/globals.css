@@ -267,3 +267,24 @@ body:has(.mobile-cart) footer{padding-bottom:110px}
  .menu-section .product-bottom strong{font-size:16px}
  .menu-section .product-bottom .add-button{min-height:40px;padding:8px 12px;font-size:12px}
 }
+
+/* A compact category rail with explicit navigation instead of a bulky scrollbar. */
+@media screen{
+ .menu-navigation .category-rail{display:flex;align-items:center;gap:8px;padding:7px;background:#fffdf9;border:1px solid #e9ddcf;border-radius:16px;box-shadow:0 3px 12px #50351c08}
+ .menu-navigation .category-rail .categories{position:relative;flex:1;min-width:0;gap:5px;margin:0;padding:3px;border:0;border-radius:0;background:transparent;scrollbar-width:none;overscroll-behavior-x:contain}
+ .menu-navigation .category-rail .categories::-webkit-scrollbar{display:none}
+ .menu-navigation .category-rail .categories button{flex-shrink:0;background:transparent;color:#695447;border:1px solid transparent;border-radius:10px;box-shadow:none;min-height:40px;padding:9px 15px;font-size:12px;font-weight:600;white-space:nowrap;translate:none}
+ .menu-navigation .category-rail .categories button.active{background:#bc3430;color:#fff;border-color:#ad2e29;box-shadow:0 2px 5px #a82c2422;font-weight:700}
+ .menu-navigation .category-rail .categories button:hover:not(.active){background:#f7eee2;border-color:transparent}
+ .menu-navigation .category-arrow{display:grid;place-items:center;flex:0 0 36px;width:36px;height:40px;padding:0;border:1px solid #e4d4c1;border-radius:10px;background:#fff8ee;color:#6b4634;box-shadow:0 2px 0 #e0cfba;transition:background .15s,opacity .15s}
+ .menu-navigation .category-arrow:hover:not(:disabled){background:#f4e5d1}
+ .menu-navigation .category-arrow:active:not(:disabled){box-shadow:none;translate:0 1px}
+ .menu-navigation .category-arrow:disabled{opacity:.3;box-shadow:none;cursor:default}
+ .menu-navigation .category-rail button:focus-visible{outline:2px solid #bc3430;outline-offset:1px}
+}
+@media screen and (max-width:760px){
+ .menu-navigation .category-rail{gap:0;padding:5px;border-radius:13px}
+ .menu-navigation .category-arrow{display:none}
+ .menu-navigation .category-rail .categories{padding:3px;gap:4px}
+ .menu-navigation .category-rail .categories button{min-height:44px;padding:9px 13px;font-size:12px}
+}
