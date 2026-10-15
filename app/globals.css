@@ -70,3 +70,33 @@
 }
 @media screen and (max-width:360px){.topline{font-size:10px;gap:6px}.site-header .brand{font-size:18px}.site-header .brand small{display:none}.hero h1{font-size:39px}.hero-bottom{font-size:7px;gap:6px}.cart-line{flex-wrap:wrap}.cart-line .stepper{margin-left:auto}.choice{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}button,a{transition:none}}
+
+/* A dedicated receipt keeps dashboard controls off thermal prints. */
+.pos-receipt{display:none}
+@media print{
+ html,body{height:auto!important;overflow:visible!important;background:#fff!important}
+ .manager-shell.printing-order{display:block!important;min-height:0!important;margin:0!important;padding:0!important}
+ .manager-shell.printing-order>*:not(.pos-receipt){display:none!important}
+ .manager-shell.printing-order>.pos-receipt{display:block!important;width:72mm;max-width:100%;margin:0;padding:0;background:#fff;color:#000;font:11px/1.4 "Courier New",monospace;letter-spacing:0;overflow-wrap:anywhere}
+ .pos-receipt *{color:#000;box-shadow:none;text-shadow:none}
+ .pos-receipt p{margin:0 0 3px}
+ .pos-receipt h1{margin:0 0 5px;font:900 23px/1.1 "Courier New",monospace;letter-spacing:1px}
+ .pos-receipt h2{margin:9px 0 0;font:bold 13px/1.3 "Courier New",monospace;letter-spacing:1px}
+ .pos-center{text-align:center}
+ .pos-section{border-top:1px dashed #000;margin-top:9px;padding-top:8px}
+ .pos-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+ .pos-row>:last-child{text-align:right}
+ .pos-items{width:100%;table-layout:fixed;border-collapse:collapse;margin-top:9px;font:inherit}
+ .pos-qty{width:8mm}.pos-amount{width:22mm}
+ .pos-items th{border-top:1px dashed #000;border-bottom:1px dashed #000;padding:5px 0;text-align:left}
+ .pos-items td{vertical-align:top;padding:6px 0}
+ .pos-items th:last-child,.pos-items td:last-child{text-align:right;white-space:nowrap}
+ .pos-items td:nth-child(2){padding-right:5px}
+ .pos-items td span{display:block;font-size:10px}
+ .pos-items tr,.pos-totals,.pos-footer{break-inside:avoid;page-break-inside:avoid}
+ .pos-items thead{display:table-header-group}
+ .pos-grand{font-size:15px;border-top:1px solid #000;border-bottom:1px solid #000;padding:6px 0;margin:6px 0!important}
+ .pos-note{margin-top:6px!important;font-size:10px}
+ .pos-footer{border-top:1px dashed #000;margin-top:10px;padding:9px 0 5mm}
+ .pos-id{font-size:9px;margin-top:7px!important}
+}

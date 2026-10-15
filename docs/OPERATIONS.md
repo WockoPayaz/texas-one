@@ -13,7 +13,7 @@
 - Pickup and table orders can go from Ready to Completed.
 - Advance payments must be marked paid before accepting. Cash must be marked collected before completion.
 - You can cancel active orders. Status and payment changes are recorded in the order data; this is not a full accounting or audit system.
-- Print a receipt from the order details. Contact the customer with the displayed phone/address when needed.
+- Print a POS receipt from the order details. Select your 80 mm thermal printer/paper, 100% scale, and turn off browser headers and footers. The receipt uses a 72 mm content width, shows saved order prices, and only marks payment paid after manager confirmation. Cancelled orders are labelled clearly. You can also save it as a PDF. Contact the customer with the displayed phone/address when needed.
 - Table QR links identify the table; they do not prove the customer is physically seated there. Staff should check suspicious orders.
 
 ## Before public launch
