@@ -253,3 +253,17 @@ body:has(.mobile-cart) footer{padding-bottom:110px}
  .menu-section .product-bottom strong small{font-size:11px;color:#76675d}
  .menu-section .product-bottom .add-button{width:100%;min-height:44px;font-size:13px}
 }
+
+/* Scale desktop cards down without changing the phone grid. */
+@media screen and (min-width:761px){
+ .menu-section{max-width:1040px}
+ .menu-section .product-grid{gap:12px}
+ .menu-section .product-card .product-photo{height:170px;aspect-ratio:auto;padding:8px}
+ .menu-section .product-body{padding:11px 13px 13px}
+ .menu-section .product-card h3{font-size:16px;margin-bottom:5px}
+ .menu-section .product-card p{font-size:11px;line-height:1.4;-webkit-line-clamp:1;margin-bottom:5px}
+ .menu-section .options-label{font-size:10px;margin-bottom:6px}
+ .menu-section .product-bottom{gap:7px}
+ .menu-section .product-bottom strong{font-size:16px}
+ .menu-section .product-bottom .add-button{min-height:40px;padding:8px 12px;font-size:12px}
+}
