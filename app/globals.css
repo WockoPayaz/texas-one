@@ -271,7 +271,7 @@ body:has(.mobile-cart) footer{padding-bottom:110px}
 /* A compact category rail with explicit navigation instead of a bulky scrollbar. */
 @media screen{
  .menu-navigation .category-rail{display:flex;align-items:center;gap:8px;padding:7px;background:#fffdf9;border:1px solid #e9ddcf;border-radius:16px;box-shadow:0 3px 12px #50351c08}
- .menu-navigation .category-rail .categories{position:relative;flex:1;min-width:0;gap:5px;margin:0;padding:3px;border:0;border-radius:0;background:transparent;scrollbar-width:none;overscroll-behavior-x:contain}
+ .menu-navigation .category-rail .categories{position:relative;inset:auto;flex:1;min-width:0;gap:5px;margin:0;padding:3px;border:0;border-radius:0;background:transparent;scrollbar-width:none;overscroll-behavior-x:contain}
  .menu-navigation .category-rail .categories::-webkit-scrollbar{display:none}
  .menu-navigation .category-rail .categories button{flex-shrink:0;background:transparent;color:#695447;border:1px solid transparent;border-radius:10px;box-shadow:none;min-height:40px;padding:9px 15px;font-size:12px;font-weight:600;white-space:nowrap;translate:none}
  .menu-navigation .category-rail .categories button.active{background:#bc3430;color:#fff;border-color:#ad2e29;box-shadow:0 2px 5px #a82c2422;font-weight:700}
