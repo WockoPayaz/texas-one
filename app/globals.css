@@ -317,6 +317,20 @@ body:has(.mobile-cart) footer{padding-bottom:110px}
  .food-hero-action{margin-top:10px}.food-hero-action .primary{min-height:46px;min-width:170px;font-size:14px}.food-hero-action p{font-size:9px;max-width:260px;line-height:1.6;margin:10px auto 0}.food-scroll-hint{font-size:6px;letter-spacing:.7px;margin-top:13px}
 }
 @media screen and (max-height:620px){.food-hero{height:auto}.food-scene{position:relative;top:auto;height:470px;min-height:0}.food-scroll-hint{display:none}}
-@media(prefers-reduced-motion:reduce){.food-hero{height:auto}.food-scene{position:relative;top:auto}.food-scroll-hint{display:none}.food-brand{transform:none}.food-pizza .food-player{rotate:0deg}}
+
 /* Contain falling ingredient layers inside the food stage. */
 .food-art{overflow:hidden}
+
+/* Longer scroll travel and centred food art; motion can be paused explicitly. */
+.food-hero{height:calc(640px + 100svh)}
+.food-burger .food-player{transform:translateY(-10%) scale(1.22)}
+.food-motion-toggle{position:absolute;right:18px;bottom:9px;z-index:3;font-size:10px;color:#785942;padding:10px;text-decoration:underline;text-underline-offset:3px;min-height:36px}
+@media screen and (max-width:760px){
+ .food-hero{height:calc(490px + 125svh)}
+ .food-burger .food-player{transform:translateY(-7%) scale(1.48)}
+ .food-motion-toggle{position:static;font-size:9px;min-height:32px;padding:5px 12px;margin-top:4px;flex-shrink:0}
+ .food-scroll-hint{margin-top:3px}
+}
+@media screen and (max-height:620px){.food-hero{height:calc(470px + 80svh)}.food-scene{position:sticky;top:calc(var(--store-header-height,90px) + 4px);height:calc(100svh - var(--store-header-height,90px) - 12px);min-height:340px}.food-headline{margin-top:5px}.food-headline h1{font-size:32px}.food-hero-action{margin-top:5px}}
+@media screen and (max-height:480px){.food-hero{height:auto}.food-scene{position:relative;top:auto;height:440px}}
+@media screen and (max-width:760px){.food-pizza .food-player{transform:translateY(-5%) rotate(var(--pizza-turn)) scale(1.2)}}
