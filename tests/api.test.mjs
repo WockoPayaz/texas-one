@@ -107,3 +107,43 @@ test('restaurant coordinates and radius are validated; customer cannot change se
  for(const loc of [{latitude:91,longitude:67,radiusMeters:150},{latitude:30,longitude:null,radiusMeters:150},{latitude:30,longitude:67,radiusMeters:5000}])assert.equal((await send('admin/settings','PUT',{...s,dineInLocation:loc})).status,400);
  globalThis.__testUser=null;assert.equal((await send('admin/settings','PUT',s)).status,401);globalThis.__testUser={email:'owner@example.test'};
 });
+
+test('table deletion requires a manager, invalidates its QR, and keeps order history',async()=>{
+ const i=await dineCustomer();const made=await send('orders','POST',i);assert.equal(made.status,201);
+ globalThis.__testUser=null;assert.equal((await send('admin/table','DELETE',{id:i.table})).status,401);
+ globalThis.__testUser={email:'owner@example.test'};
+ assert.equal((await send('admin/table','DELETE',{id:i.table})).status,200);
+ assert.equal((await send('catalog?table='+i.table)).body.table,null);
+ assert.equal((await send('orders','POST',{...i,requestId:crypto.randomUUID()})).status,400);
+ assert.equal((await send('orders/'+made.body.token)).body.table.label,'Guard test');
+ assert.equal((await send('admin')).body.tables.some(t=>t.id===i.table),false);
+ assert.equal((await send('admin/table','DELETE',{id:i.table})).status,404);
+});
+async function returnFixture(status='completed',payment='paid'){
+ const id=crypto.randomUUID(),token=crypto.randomUUID();
+ const body={name:'Return test',phone:'03012345678',mode:'pickup',payment:'cash',items:[{id:'chicken-burger',name:'Chicken Burger',variant:'Regular',quantity:1,unitPrice:360}],subtotal:360,deliveryFee:0,total:360};
+ await postgres.query('INSERT INTO orders(id,token,request_id,created_at,status,payment_status,body) VALUES($1,$2,$3,$4,$5,$6,$7)',[id,token,crypto.randomUUID(),new Date().toISOString(),status,payment,JSON.stringify(body)]);
+ return {id,token};
+}
+test('full refund records audit details and cannot be repeated or changed back to paid',async()=>{
+ const o=await returnFixture();globalThis.__testUser=null;assert.equal((await send('admin/return-order','POST',{id:o.id,refund:true})).status,401);globalThis.__testUser={email:'owner@example.test'};
+ const result=await send('admin/return-order','POST',{id:o.id,refund:true,reason:'Customer returned the order'});assert.equal(result.status,200);
+ const order=(await send('admin')).body.orders.find(v=>v.id===o.id);assert.equal(order.status,'returned');assert.equal(order.paymentStatus,'refunded');assert.equal(order.refundAmount,360);assert.equal(order.returnedBy,'owner@example.test');assert.equal(order.refundedBy,'owner@example.test');assert.equal(order.returnReason,'Customer returned the order');assert(order.refundedAt);
+ const tracked=(await send('orders/'+o.token)).body;assert.equal(tracked.status,'returned');assert.equal(tracked.paymentStatus,'refunded');assert(!('refundedBy' in tracked));
+ assert.equal((await send('admin/return-order','POST',{id:o.id,refund:true})).status,409);
+ assert.equal((await send('admin/order','PUT',{id:o.id,paymentStatus:'paid'})).status,400);
+ assert.equal((await send('admin/order','PUT',{id:o.id,status:'accepted'})).status,400);
+});
+test('return and refund are separate; unpaid or unverified orders cannot be refunded',async()=>{
+ const paid=await returnFixture();assert.equal((await send('admin/return-order','POST',{id:paid.id,refund:false,reason:'First record the return'})).status,200);
+ let order=(await send('admin')).body.orders.find(v=>v.id===paid.id);assert.equal(order.paymentStatus,'paid');assert(!order.refundedAt);
+ assert.equal((await send('admin/return-order','POST',{id:paid.id,refund:false})).status,409);
+ assert.equal((await send('admin/return-order','POST',{id:paid.id,refund:true})).status,200);
+ order=(await send('admin')).body.orders.find(v=>v.id===paid.id);assert.equal(order.returnReason,'First record the return');assert.equal(order.paymentStatus,'refunded');
+ const unpaid=await returnFixture('new','unpaid');assert.equal((await send('admin/return-order','POST',{id:unpaid.id,refund:true})).status,400);assert.equal((await send('admin/return-order','POST',{id:unpaid.id,refund:false})).status,200);
+ const unverified=await returnFixture('new','awaiting-verification');assert.equal((await send('admin/return-order','POST',{id:unverified.id,refund:false})).status,400);
+ const bypass=await returnFixture();assert.equal((await send('admin/order','PUT',{id:bypass.id,status:'returned'})).status,400);
+});
+test('concurrent refund recording succeeds once',async()=>{
+ const o=await returnFixture();const results=await Promise.all([send('admin/return-order','POST',{id:o.id,refund:true}),send('admin/return-order','POST',{id:o.id,refund:true})]);assert.deepEqual(results.map(v=>v.status).sort(),[200,409]);
+});

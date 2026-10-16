@@ -7,4 +7,4 @@ export function priceOrder(lines:CartLine[],menu:MenuItem[],mode:string,settings
  const subtotal=items.reduce((s,l)=>s+l.unitPrice*l.quantity,0);if(mode==='delivery'&&subtotal<settings.minimumOrder)throw Error(`Minimum delivery order is Rs. ${settings.minimumOrder}.`);
  const deliveryFee=mode==='delivery'?settings.deliveryFee:0;return {items,subtotal,deliveryFee,total:subtotal+deliveryFee};
 }
-export const transitions:Record<string,string[]>={new:['accepted','cancelled'],accepted:['preparing','cancelled'],preparing:['ready','cancelled'],ready:['out-for-delivery','completed','cancelled'],'out-for-delivery':['completed','cancelled'],completed:[],cancelled:[]};
+export const transitions:Record<string,string[]>={new:['accepted','cancelled'],accepted:['preparing','cancelled'],preparing:['ready','cancelled'],ready:['out-for-delivery','completed','cancelled'],'out-for-delivery':['completed','cancelled'],completed:[],cancelled:[],returned:[]};
