@@ -29,5 +29,5 @@ for(const n of ['Mint Margarita','Pineapple Margarita','Mint Lemonade'])add('Mar
 add('Margaritas & Soda','Lemon Soda',240);
 for(const name of ['Texas One Special Pizza','Double Decker Zinger Burger','Chicken Lasagna','Special Chicken Steak'])items.find(i=>i.name===name)!.featured=true;
 export const seedMenu=items;
-export const defaultSettings={name:'TEXAS ONE',phone:'03178103338',address:'PSO Askari Petrol Pump, Airport Road, Quetta',hours:'Open 24 hours',deliveryArea:'All of Quetta',deliveryFee:300,minimumOrder:1000,acceptingOrders:true,payments:{jazzcash:{title:'',account:''},easypaisa:{title:'',account:''},bank:{title:'',account:'',bankName:''}}};
+export const defaultSettings={name:'TEXAS ONE',phone:'03178103338',address:'PSO Askari Petrol Pump, Airport Road, Quetta',hours:'Open 24 hours',deliveryArea:'All of Quetta',deliveryFee:300,minimumOrder:1000,acceptingOrders:true,dineInLocation:{latitude:null as number|null,longitude:null as number|null,radiusMeters:150},payments:{jazzcash:{title:'',account:''},easypaisa:{title:'',account:''},bank:{title:'',account:'',bankName:''}}};
 export type Settings=typeof defaultSettings;

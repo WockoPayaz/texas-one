@@ -4,24 +4,33 @@ import {PGlite} from '@electric-sql/pglite';
 import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
 import ts from 'typescript';
 const dir=new URL('../.sites-runtime/tests/',import.meta.url);mkdirSync(dir,{recursive:true});
-const compile=(src,dst)=>{let s=readFileSync(new URL('../'+src,import.meta.url),'utf8');s=s.replace("import {Pool} from 'pg';","const Pool=globalThis.__testPool;").replace("import {getManagerUser,photos} from '@/lib/supabase';","const getManagerUser=async()=>globalThis.__testUser; const photos=globalThis.__testPhotos;").replaceAll("'@/lib/database'","'./database.mjs'").replaceAll("'@/lib/menu'","'./menu.mjs'").replaceAll("'@/lib/order'","'./order.mjs'");writeFileSync(new URL(dst,dir),ts.transpileModule(s,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText);};
-compile('lib/menu.ts','menu.mjs');compile('lib/order.ts','order.mjs');compile('lib/database.ts','database.mjs');compile('app/api/[...path]/route.ts','api.mjs');
+const compile=(src,dst)=>{let s=readFileSync(new URL('../'+src,import.meta.url),'utf8');s=s.replace("import {Pool,type PoolClient} from 'pg';","const Pool=globalThis.__testPool;").replace("import {getManagerUser,photos} from '@/lib/supabase';","const getManagerUser=async()=>globalThis.__testUser; const photos=globalThis.__testPhotos;").replaceAll("'@/lib/database'","'./database.mjs'").replaceAll("'@/lib/menu'","'./menu.mjs'").replaceAll("'@/lib/order'","'./order.mjs'").replaceAll("'@/lib/dine-in'","'./dine-in.mjs'").replaceAll("'./database'","'./database.mjs'");writeFileSync(new URL(dst,dir),ts.transpileModule(s,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText);};
+compile('lib/dine-in.ts','dine-in.mjs');compile('lib/menu.ts','menu.mjs');compile('lib/order.ts','order.mjs');compile('lib/database.ts','database.mjs');compile('app/api/[...path]/route.ts','api.mjs');
 const postgres=new PGlite();
 await postgres.exec('CREATE ROLE anon; CREATE ROLE authenticated; CREATE SCHEMA storage; CREATE TABLE storage.buckets(id text PRIMARY KEY,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);');
 await postgres.exec(readFileSync(new URL('../supabase/schema.sql',import.meta.url),'utf8'));
-globalThis.__testPool=class {async query(sql,args){if(globalThis.__testDbError)throw globalThis.__testDbError;let r;try{r=await postgres.query(sql,args);}catch(e){console.error(e.message);throw e;}return {rows:r.rows,rowCount:r.affectedRows};}};
+// PGlite has one connection: serialize checkouts to preserve transaction boundaries.
+let queue=Promise.resolve();
+async function lock(){let release;const prior=queue;queue=new Promise(r=>release=r);await prior;return release;}
+async function query(sql,args){if(globalThis.__testDbError)throw globalThis.__testDbError;const r=await postgres.query(sql,args);return {rows:r.rows,rowCount:r.affectedRows};}
+globalThis.__testPool=class {async query(sql,args){const release=await lock();try{return await query(sql,args);}finally{release();}}async connect(){const release=await lock();return {query,release};}};
 const storedPhotos=new Map();globalThis.__testUser=null;globalThis.__testPhotos={get:async key=>storedPhotos.get(key)||null,put:async(key,bytes,options)=>{storedPhotos.set(key,{body:bytes,httpMetadata:options.httpMetadata});},remove:async key=>{storedPhotos.delete(key);}};
 process.env.DATABASE_URL='postgresql://test-only';process.env.OWNER_EMAIL='owner@example.test';
 const {GET,POST,PUT,DELETE}=await import(new URL('api.mjs',dir));
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jWZkAAAAASUVORK5CYII=','base64');
-const send=async(path,method='GET',body,origin='https://test.local')=>{if(body?.receipt){const f=new FormData();f.set('order',JSON.stringify(body));f.set('receipt',new File([png],'receipt.png',{type:'image/png'}));body=f;}const r=await ({GET,POST,PUT,DELETE}[method])(new Request('https://test.local/api/'+path,{method,headers:{origin,...(body instanceof FormData?{}:{'Content-Type':'application/json'}),'x-vercel-forwarded-for':'127.0.0.1'},body:body instanceof FormData?body:body?JSON.stringify(body):undefined}));return {status:r.status,body:await r.json()};};
+let cookie='';
+const send=async(path,method='GET',body,origin='https://test.local')=>{if(body?.receipt){const f=new FormData();f.set('order',JSON.stringify(body));f.set('receipt',new File([png],'receipt.png',{type:'image/png'}));body=f;}const r=await ({GET,POST,PUT,DELETE}[method])(new Request('https://test.local/api/'+path,{method,headers:{origin,cookie,...(body instanceof FormData?{}:{'Content-Type':'application/json'}),'x-vercel-forwarded-for':'127.0.0.1'},body:body instanceof FormData?body:body?JSON.stringify(body):undefined}));if(r.headers.get('set-cookie'))cookie=r.headers.get('set-cookie').split(';')[0];return {status:r.status,body:await r.json()};};
 test('an arbitrary first visitor cannot claim the owner role',async()=>{globalThis.__testUser={email:'outsider@example.test'};assert.equal((await send('admin')).status,403);globalThis.__testUser=null;});
 const customer=()=>({requestId:crypto.randomUUID(),mode:'delivery',name:'Test Customer',phone:'03178103338',address:'Test address Quetta',payment:'cash',lines:[{id:'chicken-tikka-pizza',variant:1,quantity:1}],total:1});
 test('manager requires sign in and prevents unlisted accounts',async()=>{assert.equal((await send('admin')).status,401);globalThis.__testUser={email:'owner@example.test'};assert.equal((await send('admin')).status,200);globalThis.__testUser={email:'outsider@example.test'};assert.equal((await send('admin')).status,403);globalThis.__testUser={email:'owner@example.test'};});
 test('server computes totals and retries create only one order',async()=>{const i=customer();const a=await send('orders','POST',i);assert.equal(a.status,201);const b=await send('orders','POST',i);assert.deepEqual(b.body,a.body);const o=await send('orders/'+a.body.token);assert.equal(o.body.total,1500);assert.equal(o.body.paymentStatus,'unpaid');assert.equal((await send('orders/unknown')).status,404);assert(!('address' in o.body));});
 test('CSRF origin rejected',async()=>assert.equal((await send('orders','POST',customer(),'https://other.test')).status,403));
 test('advance payment unavailable until account configuration',async()=>{const i=customer();i.payment='jazzcash';i.receipt=true;assert.equal((await send('orders','POST',i)).status,400);const c=(await send('catalog')).body;c.settings.payments.jazzcash={title:'Restaurant Test',account:'03000000000'};assert.equal((await send('admin/settings','PUT',c.settings)).status,200);const o=await send('orders','POST',i);assert.equal(o.status,201);assert.equal((await send('admin/order','PUT',{id:o.body.id,status:'accepted'})).status,400);assert.equal((await send('admin/order','PUT',{id:o.body.id,paymentStatus:'paid'})).status,200);assert.equal((await send('admin/order','PUT',{id:o.body.id,status:'accepted'})).status,200);});
-test('dine-in requires active table and charges no delivery',async()=>{const t=await send('admin/table','POST',{label:'Table 01'});const i=customer();i.mode='dine-in';i.lines=[{id:'chicken-burger',variant:0,quantity:1}];i.table='not-a-table';assert.equal((await send('orders','POST',i)).status,400);i.table=t.body.id;const a=await send('orders','POST',i);assert.equal(a.status,201);const o=await send('orders/'+a.body.token);assert.equal(o.body.total,360);assert.equal(o.body.table.label,'Table 01');await send('admin/table','PUT',{id:i.table,active:false});i.requestId=crypto.randomUUID();assert.equal((await send('orders','POST',i)).status,400);});
+test('dine-in requires active table and charges no delivery',async()=>{const t=await send('admin/table','POST',{label:'Table 01'});const i=customer();i.mode='dine-in';i.lines=[{id:'chicken-burger',variant:0,quantity:1}];i.table='not-a-table';assert.equal((await send('orders','POST',i)).status,400);i.table=t.body.id;
+ await send('dine-session','POST');i.position={latitude:30.2,longitude:67,accuracy:15,timestamp:Date.now()};
+ assert.equal((await send('orders','POST',i)).status,503);
+ const settings=(await send('catalog')).body.settings;settings.dineInLocation={latitude:30.2,longitude:67,radiusMeters:150};await send('admin/settings','PUT',settings);
+ const a=await send('orders','POST',i);assert.equal(a.status,201);const o=await send('orders/'+a.body.token);assert.equal(o.body.total,360);assert.equal(o.body.table.label,'Table 01');await send('admin/table','PUT',{id:i.table,active:false});i.requestId=crypto.randomUUID();assert.equal((await send('orders','POST',i)).status,400);});
 test('manager price changes affect the server total',async()=>{const c=(await send('catalog')).body;const i=c.menu.find(x=>x.id==='chicken-burger');i.variants[0].price=420;assert.equal((await send('admin/item','PUT',i)).status,200);const o=customer();o.mode='pickup';o.lines=[{id:i.id,variant:0,quantity:1}];const a=await send('orders','POST',o);assert.equal((await send('orders/'+a.body.token)).body.total,420);});
 test('cash must be collected before completion; order transitions validated',async()=>{const a=(await send('orders','POST',customer())).body;assert.equal((await send('admin/order','PUT',{id:a.id,status:'completed'})).status,400);for(const status of ['accepted','preparing','ready'])assert.equal((await send('admin/order','PUT',{id:a.id,status})).status,200);assert.equal((await send('admin/order','PUT',{id:a.id,status:'completed'})).status,400);await send('admin/order','PUT',{id:a.id,paymentStatus:'paid'});assert.equal((await send('admin/order','PUT',{id:a.id,status:'completed'})).status,200);});
 
@@ -48,4 +57,53 @@ test('invalid and oversized receipts are rejected before storage',async()=>{
  for(const file of [new File(['<svg></svg>'],'fake.png',{type:'image/png'}),new File([new Uint8Array(4000001)],'large.png',{type:'image/png'})]){
  const f=new FormData();f.set('order',JSON.stringify({...customer(),payment:'jazzcash'}));f.set('receipt',file);const before=storedPhotos.size;const result=await send('orders','POST',f);assert([400,413].includes(result.status));assert.equal(storedPhotos.size,before);
  }
+});
+
+let testPhone=0;
+async function dineCustomer(){
+ cookie='';await send('dine-session','POST');
+ const table=(await send('admin/table','POST',{label:'Guard test'})).body.id;
+ return {...customer(),phone:'030'+String(++testPhone).padStart(8,'0'),mode:'dine-in',table,position:{latitude:30.2,longitude:67,accuracy:10,timestamp:Date.now()}};
+}
+test('dine-in rejects missing, remote, inaccurate, stale and future location readings',async()=>{
+ const i=await dineCustomer();
+ for(const position of [undefined,{...i.position,latitude:31},{...i.position,accuracy:1000},{...i.position,timestamp:Date.now()-180000},{...i.position,timestamp:Date.now()+60000}]){
+  const r=await send('orders','POST',{...i,position});assert.equal(r.status,403,JSON.stringify(r));
+ }
+ assert.equal((await send('orders','POST',i)).status,201);
+});
+test('pending protection covers new IDs, phone formats and another session; acknowledgement releases it',async()=>{
+ const i=await dineCustomer();const first=await send('orders','POST',i);assert.equal(first.status,201);
+ assert.equal((await send('orders','POST',{...i,requestId:crypto.randomUUID()})).status,409);
+ cookie='';await send('dine-session','POST');
+ assert.equal((await send('orders','POST',{...i,phone:'+92'+i.phone.slice(1),requestId:crypto.randomUUID()})).status,409);
+ await send('admin/order','PUT',{id:first.body.id,status:'accepted'});
+ assert.equal((await send('orders','POST',{...i,requestId:crypto.randomUUID()})).status,201);
+ const stored=(await postgres.query('SELECT body FROM orders WHERE id=$1',[first.body.id])).rows[0];assert(!('position' in JSON.parse(stored.body)));
+ const tracking=(await send('orders/'+first.body.token)).body;assert(!('dineSession' in tracking));
+});
+test('concurrent requests yield only one pending order and retries return the original',async()=>{
+ const i=await dineCustomer();const results=await Promise.all([send('orders','POST',i),send('orders','POST',{...i,requestId:crypto.randomUUID()})]);
+ assert.deepEqual(results.map(r=>r.status).sort(),[201,409]);
+ const same=await dineCustomer();const retries=await Promise.all([send('orders','POST',same),send('orders','POST',same)]);assert.equal(retries[0].body.id,retries[1].body.id);
+});
+test('browser session limits prevent flooding even when the phone number changes',async()=>{
+ const i=await dineCustomer();for(let n=0;n<6;n++)assert.equal((await send('orders','POST',{...i,position:undefined})).status,403);
+ assert.equal((await send('orders','POST',{...i,phone:'03099999999'})).status,429);
+});
+test('blocked and expired sessions cannot place more orders; block action requires manager',async()=>{
+ const i=await dineCustomer();const first=await send('orders','POST',i);assert.equal(first.status,201);
+ globalThis.__testUser=null;assert.equal((await send('admin/block-dine-session','POST',{orderId:first.body.id})).status,401);
+ globalThis.__testUser={email:'owner@example.test'};assert.equal((await send('admin/block-dine-session','POST',{orderId:first.body.id})).status,200);
+ assert.equal((await send('dine-session','POST')).status,403);
+ assert.equal((await send('orders','POST',{...i,requestId:crypto.randomUUID()})).status,403);
+ const expired=await dineCustomer();const {hash}=await import(new URL('dine-in.mjs',dir));
+ await postgres.query('UPDATE rate_limits SET expires=0 WHERE key=$1',['dine-session:'+hash(cookie.split('=')[1])]);
+ assert.equal((await send('orders','POST',expired)).status,403);
+ cookie='';assert.equal((await send('orders','POST',expired)).status,403);
+});
+test('restaurant coordinates and radius are validated; customer cannot change settings',async()=>{
+ const s=(await send('catalog')).body.settings;
+ for(const loc of [{latitude:91,longitude:67,radiusMeters:150},{latitude:30,longitude:null,radiusMeters:150},{latitude:30,longitude:67,radiusMeters:5000}])assert.equal((await send('admin/settings','PUT',{...s,dineInLocation:loc})).status,400);
+ globalThis.__testUser=null;assert.equal((await send('admin/settings','PUT',s)).status,401);globalThis.__testUser={email:'owner@example.test'};
 });
